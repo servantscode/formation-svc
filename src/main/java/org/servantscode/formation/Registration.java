@@ -3,8 +3,9 @@ package org.servantscode.formation;
 public class Registration {
     private int enrolleeId;
     private String enrolleeName;
-    private int classId;
-    private int className;
+    private int programId;
+    private int sectionId;
+    private String sectionName;
     private int enrolleeAge;
     private int grade;
     private int sacramentalGroupId;
@@ -17,11 +18,14 @@ public class Registration {
     public String getEnrolleeName() { return enrolleeName; }
     public void setEnrolleeName(String enrolleeName) { this.enrolleeName = enrolleeName; }
 
-    public int getClassId() { return classId; }
-    public void setClassId(int classId) { this.classId = classId; }
+    public int getProgramId() { return programId; }
+    public void setProgramId(int programId) { this.programId = programId; }
 
-    public int getClassName() { return className; }
-    public void setClassName(int className) { this.className = className; }
+    public int getSectionId() { return sectionId; }
+    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+
+    public String getSectionName() { return sectionName; }
+    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
 
     public int getEnrolleeAge() { return enrolleeAge; }
     public void setEnrolleeAge(int enrolleeAge) { this.enrolleeAge = enrolleeAge; }
