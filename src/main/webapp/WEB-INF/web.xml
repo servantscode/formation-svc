@@ -12,6 +12,6 @@
     </servlet-mapping>
 
     <listener>
-        <listener-class>org.servantscode.hello.db.DBUpgrade</listener-class>
+        <listener-class>org.servantscode.formation.db.DBUpgrade</listener-class>
     </listener>
 </web-app>

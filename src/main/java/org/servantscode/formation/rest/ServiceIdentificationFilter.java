@@ -1,4 +1,4 @@
-package org.servantscode.hello.rest;
+package org.servantscode.formation.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +19,7 @@ public class ServiceIdentificationFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext)
             throws IOException {
 
-        ThreadContext.put("service.name", "hello");
+        ThreadContext.put("service.name", "formation");
 
         // Uncomment to enable service entry logging
 //        if(!requestContext.getMethod().equalsIgnoreCase("OPTIONS"))
