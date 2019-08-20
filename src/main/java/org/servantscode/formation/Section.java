@@ -9,6 +9,7 @@ public class Section {
     private int roomId;
     private String roomName;
     private int studentCount;
+    private boolean complete;
 
     // ----- Accessors -----
     public int getId() { return id; }
@@ -34,4 +35,7 @@ public class Section {
 
     public int getStudentCount() { return studentCount; }
     public void setStudentCount(int studentCount) { this.studentCount = studentCount; }
+
+    public boolean isComplete() { return complete; }
+    public void setComplete(boolean complete) { this.complete = complete; }
 }

@@ -37,6 +37,7 @@ public class DBUpgrade extends AbstractDBUpgrade {
                                         "program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE, " +
                                         "instructor_id INTEGER REFERENCES people(id) ON DELETE SET NULL, " +
                                         "room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL, " +
+                                        "complete BOOLEAN DEFAULT false, " +
                                         "org_id INTEGER references organizations(id) ON DELETE CASCADE)");
         }
 

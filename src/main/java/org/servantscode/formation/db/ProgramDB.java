@@ -10,6 +10,7 @@ import org.servantscode.formation.Program;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("SqlNoDataSourceInspection")
@@ -18,12 +19,20 @@ public class ProgramDB extends DBAccess {
 
     private SearchParser<Program> searchParser;
 
+    private static HashMap<String, String> FIELD_MAP = new HashMap<>(8);
+    static {
+        FIELD_MAP.put("name", "prog.name");
+        FIELD_MAP.put("coordinatorId", "coordinator_id");
+        FIELD_MAP.put("groupId", "group_id");
+    }
+
     public ProgramDB() {
-        this.searchParser = new SearchParser<>(Program.class, "name");
+        this.searchParser = new SearchParser<>(Program.class, "name", FIELD_MAP);
     }
 
     public int getCount(String search) {
-        QueryBuilder query = count().from("programs").search(searchParser.parse(search)).inOrg();
+        QueryBuilder query = count().from("programs prog", "people p")
+                .where("prog.coordinator_id = p.id").search(searchParser.parse(search)).inOrg("prog.org_id");
         try (Connection conn = getConnection();
              PreparedStatement stmt = query.prepareStatement(conn);
              ResultSet rs = stmt.executeQuery()) {
@@ -40,7 +49,7 @@ public class ProgramDB extends DBAccess {
         QueryBuilder query = select("prog.*", "p.name as coordinator_name")
                 .from("programs prog", "people p")
                 .where("prog.coordinator_id = p.id")
-                .withId(id).inOrg();
+                .where("prog.id=?", id).inOrg("prog.org_id");
         try (Connection conn = getConnection();
              PreparedStatement stmt = query.prepareStatement(conn);
         ) {
@@ -55,7 +64,7 @@ public class ProgramDB extends DBAccess {
         QueryBuilder query = select("prog.*", "p.name as coordinator_name")
                 .from("programs prog", "people p")
                 .where("prog.coordinator_id = p.id")
-                .search(searchParser.parse(search)).inOrg()
+                .search(searchParser.parse(search)).inOrg("p.org_id")
                 .sort(sortField).limit(count).offset(start);
         try ( Connection conn = getConnection();
               PreparedStatement stmt = query.prepareStatement(conn)
