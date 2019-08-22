@@ -1,6 +1,7 @@
 package org.servantscode.formation;
 
 public class Registration {
+    private int id;
     private int enrolleeId;
     private String enrolleeName;
     private int programId;
@@ -12,6 +13,9 @@ public class Registration {
     private String sacramentalGroupName;
 
     // ----- Accessors -----
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
     public int getEnrolleeId() { return enrolleeId; }
     public void setEnrolleeId(int enrolleeId) { this.enrolleeId = enrolleeId; }
 

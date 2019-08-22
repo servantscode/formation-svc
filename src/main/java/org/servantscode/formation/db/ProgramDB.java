@@ -46,10 +46,8 @@ public class ProgramDB extends DBAccess {
     }
 
     public Program getProgram(int id) {
-        QueryBuilder query = select("prog.*", "p.name as coordinator_name")
-                .from("programs prog", "people p")
-                .where("prog.coordinator_id = p.id")
-                .where("prog.id=?", id).inOrg("prog.org_id");
+        QueryBuilder query = baseQuery()
+                .where("prog.id=?", id);
         try (Connection conn = getConnection();
              PreparedStatement stmt = query.prepareStatement(conn);
         ) {
@@ -60,11 +58,17 @@ public class ProgramDB extends DBAccess {
         }
     }
 
+    private QueryBuilder baseQuery() {
+        return select("prog.*", "p.name as coordinator_name", "students")
+                .from("programs prog")
+                .join("LEFT JOIN people p ON prog.coordinator_id = p.id")
+                .join("LEFT JOIN (SELECT program_id, count(program_id) AS students FROM registrations r GROUP BY program_id) reg ON prog.id=reg.program_id")
+                .inOrg("prog.org_id");
+    }
+
     public List<Program> getPrograms(String search, String sortField, int start, int count) {
-        QueryBuilder query = select("prog.*", "p.name as coordinator_name")
-                .from("programs prog", "people p")
-                .where("prog.coordinator_id = p.id")
-                .search(searchParser.parse(search)).inOrg("p.org_id")
+        QueryBuilder query = baseQuery()
+                .search(searchParser.parse(search))
                 .sort(sortField).limit(count).offset(start);
         try ( Connection conn = getConnection();
               PreparedStatement stmt = query.prepareStatement(conn)
@@ -146,6 +150,7 @@ public class ProgramDB extends DBAccess {
                 r.setGroupId(rs.getInt("group_id"));
                 r.setCoordinatorId(rs.getInt("coordinator_id"));
                 r.setCoordinatorName(rs.getString("coordinator_name"));
+                r.setRegistrations(rs.getInt("students"));
                 programs.add(r);
             }
             return programs;

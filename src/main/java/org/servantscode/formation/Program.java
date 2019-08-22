@@ -6,6 +6,7 @@ public class Program {
     private int groupId;
     private int coordinatorId;
     private String coordinatorName;
+    private int registrations;
 
     // ----- Accessors -----
     public int getId() { return id; }
@@ -22,4 +23,7 @@ public class Program {
 
     public String getCoordinatorName() { return coordinatorName; }
     public void setCoordinatorName(String coordinatorName) { this.coordinatorName = coordinatorName; }
+
+    public int getRegistrations() { return registrations; }
+    public void setRegistrations(int registrations) { this.registrations = registrations; }
 }

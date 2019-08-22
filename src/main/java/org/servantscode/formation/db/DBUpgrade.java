@@ -50,10 +50,20 @@ public class DBUpgrade extends AbstractDBUpgrade {
 
         if(!tableExists("registrations")) {
             LOG.info("-- Created registrations table");
-            runSql("CREATE TABLE registrations(enrollee_id INTEGER REFERENCES people(id) ON DELETE CASCADE, " +
+            runSql("CREATE TABLE registrations(id SERIAL PRIMARY KEY, " +
+                                              "enrollee_id INTEGER REFERENCES people(id) ON DELETE CASCADE, " +
+                                              "program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE, " +
                                               "section_id INTEGER REFERENCES sections(id) ON DELETE SET NULL, " +
                                               "grade INTEGER, " +
                                               "sacramental_group_id INTEGER REFERENCES sacramental_groups(id) ON DELETE SET NULL)");
+        }
+
+        if(!columnExists("registrations", "id")) {
+            runSql("ALTER TABLE registrations ADD COLUMN id SERIAL PRIMARY KEY");
+        }
+
+        if(!columnExists("registrations", "program_id")) {
+            runSql("ALTER TABLE registrations ADD COLUMN program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE");
         }
     }
 }
