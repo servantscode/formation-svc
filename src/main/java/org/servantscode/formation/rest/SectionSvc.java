@@ -9,7 +9,12 @@ import org.servantscode.formation.db.SectionDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static java.util.Collections.singletonMap;
 
 @Path("/program/{programId}/section")
 public class SectionSvc extends SCServiceBase {
@@ -26,13 +31,13 @@ public class SectionSvc extends SCServiceBase {
                                                   @QueryParam("start") @DefaultValue("0") int start,
                                                   @QueryParam("count") @DefaultValue("10") int count,
                                                   @QueryParam("sort_field") @DefaultValue("name") String sortField,
-                                                  @QueryParam("search") @DefaultValue("") String nameSearch) {
+                                                  @QueryParam("search") @DefaultValue("") String search) {
 
         verifyUserAccess("section.list");
         try {
-            int totalPeople = db.getCount(nameSearch);
+            int totalPeople = db.getCount(search);
 
-            List<Section> results = db.getSections(programId, nameSearch, sortField, start, count);
+            List<Section> results = db.get(search, sortField, start, count, programId);
 
             return new PaginatedResponse<>(start, results.size(), totalPeople, results);
         } catch (Throwable t) {
@@ -46,7 +51,7 @@ public class SectionSvc extends SCServiceBase {
                               @PathParam("id") int id) {
         verifyUserAccess("section.read");
         try {
-            Section section = db.getSection(id);
+            Section section = db.getById(id);
             if(section.getProgramId() != programId)
                 throw new NotFoundException();
             return section;
@@ -100,7 +105,7 @@ public class SectionSvc extends SCServiceBase {
         if(id <= 0)
             throw new NotFoundException();
         try {
-            Section section = db.getSection(id);
+            Section section = db.getById(id);
             if(section == null || section.getProgramId() != programId || !db.deleteSection(id))
                 throw new NotFoundException();
             LOG.info("Deleted section: " + section.getName());

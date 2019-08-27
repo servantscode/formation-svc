@@ -11,7 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/registration")
+@Path("/program/{programId}/registration")
 public class RegistrationSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(RegistrationSvc.class);
 
@@ -22,7 +22,8 @@ public class RegistrationSvc extends SCServiceBase {
     }
 
     @GET @Produces(MediaType.APPLICATION_JSON)
-    public PaginatedResponse<Registration> getRegistrations(@QueryParam("start") @DefaultValue("0") int start,
+    public PaginatedResponse<Registration> getRegistrations(@PathParam("programId") int programId,
+                                                            @QueryParam("start") @DefaultValue("0") int start,
                                                             @QueryParam("count") @DefaultValue("10") int count,
                                                             @QueryParam("sort_field") @DefaultValue("enrollee_name") String sortField,
                                                             @QueryParam("search") @DefaultValue("") String nameSearch) {
@@ -31,7 +32,7 @@ public class RegistrationSvc extends SCServiceBase {
         try {
             int totalPeople = db.getCount(nameSearch);
 
-            List<Registration> results = db.getRegistrations(nameSearch, sortField, start, count);
+            List<Registration> results = db.getRegistrations(nameSearch, sortField, start, count, programId);
 
             return new PaginatedResponse<>(start, results.size(), totalPeople, results);
         } catch (Throwable t) {

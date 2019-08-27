@@ -3,8 +3,11 @@ package org.servantscode.formation.db;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.servantscode.commons.db.DBAccess;
+import org.servantscode.commons.db.EasyDB;
+import org.servantscode.commons.search.InsertBuilder;
 import org.servantscode.commons.search.QueryBuilder;
 import org.servantscode.commons.search.SearchParser;
+import org.servantscode.commons.search.UpdateBuilder;
 import org.servantscode.commons.security.OrganizationContext;
 import org.servantscode.formation.Program;
 
@@ -14,10 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("SqlNoDataSourceInspection")
-public class ProgramDB extends DBAccess {
+public class ProgramDB extends EasyDB<Program> {
     private static final Logger LOG = LogManager.getLogger(ProgramDB.class);
-
-    private SearchParser<Program> searchParser;
 
     private static HashMap<String, String> FIELD_MAP = new HashMap<>(8);
     static {
@@ -27,133 +28,71 @@ public class ProgramDB extends DBAccess {
     }
 
     public ProgramDB() {
-        this.searchParser = new SearchParser<>(Program.class, "name", FIELD_MAP);
+        super(Program.class, "name", FIELD_MAP);
     }
 
-    public int getCount(String search) {
-        QueryBuilder query = count().from("programs prog", "people p")
-                .where("prog.coordinator_id = p.id").search(searchParser.parse(search)).inOrg("prog.org_id");
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = query.prepareStatement(conn);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next())
-                return rs.getInt(1);
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve program count '" + search + "'", e);
-        }
-        return 0;
-    }
-
-    public Program getProgram(int id) {
-        QueryBuilder query = baseQuery()
-                .where("prog.id=?", id);
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = query.prepareStatement(conn);
-        ) {
-            List<Program> programs = processResults(stmt);
-            return firstOrNull(programs);
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve program: " + id, e);
-        }
+    private QueryBuilder data(QueryBuilder query) {
+        return query.from("programs prog").leftJoin("people p ON prog.coordinator_id = p.id");
     }
 
     private QueryBuilder baseQuery() {
-        return select("prog.*", "p.name as coordinator_name", "students")
-                .from("programs prog")
-                .join("LEFT JOIN people p ON prog.coordinator_id = p.id")
+        return data(select("prog.*", "p.name as coordinator_name", "students"))
                 .join("LEFT JOIN (SELECT program_id, count(program_id) AS students FROM registrations r GROUP BY program_id) reg ON prog.id=reg.program_id")
                 .inOrg("prog.org_id");
+    }
+
+    public int getCount(String search) {
+        return getCount(data(count()).search(searchParser.parse(search)).inOrg("prog.org_id"));
+    }
+
+    public Program getProgram(int id) {
+        return getOne(baseQuery().where("prog.id=?", id));
     }
 
     public List<Program> getPrograms(String search, String sortField, int start, int count) {
         QueryBuilder query = baseQuery()
                 .search(searchParser.parse(search))
-                .sort(sortField).limit(count).offset(start);
-        try ( Connection conn = getConnection();
-              PreparedStatement stmt = query.prepareStatement(conn)
-        ) {
-            return processResults(stmt);
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not retrieve programs.", e);
-        }
+                .page(sortField, start, count);
+        return get(query);
     }
 
     public Program create(Program program) {
-        String sql = "INSERT INTO programs(name, group_id, coordinator_id, org_id) values (?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
-        ){
+        InsertBuilder cmd = insertInto("programs")
+                .value("name", program.getName())
+                .value("group_id", program.getGroupId())
+                .value("coordinator_id", program.getCoordinatorId())
+                .inOrg();
 
-            stmt.setString(1, program.getName());
-            stmt.setInt(2, program.getGroupId());
-            stmt.setInt(3, program.getCoordinatorId());
-            stmt.setInt(4, OrganizationContext.orgId());
-
-            if(stmt.executeUpdate() == 0) {
-                throw new RuntimeException("Could not create program: " + program.getName());
-            }
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next())
-                    program.setId(rs.getInt(1));
-            }
-            return program;
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not add program: " + program.getName(), e);
-        }
+        program.setId(createAndReturnKey(cmd));
+        return program;
     }
 
     public Program updateProgram(Program program) {
-        String sql = "UPDATE programs SET name=?, group_id=?, coordinator_id=? WHERE id=? AND org_id=?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)
-        ) {
+        UpdateBuilder cmd = update("programs")
+                .value("name", program.getName())
+                .value("group_id", program.getGroupId())
+                .value("coordinator_id", program.getCoordinatorId())
+                .withId(program.getId()).inOrg();
 
-            stmt.setString(1, program.getName());
-            stmt.setInt(2, program.getGroupId());
-            stmt.setInt(3, program.getCoordinatorId());
-            stmt.setInt(4, program.getId());
-            stmt.setInt(5, OrganizationContext.orgId());
+        if(!update(cmd))
+            throw new RuntimeException("Could not update program: " + program.getName());
 
-            if (stmt.executeUpdate() == 0)
-                throw new RuntimeException("Could not update program: " + program.getName());
-
-            return program;
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not update program: " + program.getName(), e);
-        }
+        return program;
     }
 
     public boolean deleteProgram(int id) {
-        String sql = "DELETE FROM programs WHERE id=? AND org_id=?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)
-        ) {
-
-            stmt.setInt(1, id);
-            stmt.setInt(2, OrganizationContext.orgId());
-            return stmt.executeUpdate() != 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not delete program: " + id, e);
-        }
+        return delete(deleteFrom("programs").withId(id).inOrg());
     }
 
-    // ----- Private -----
-    private List<Program> processResults(PreparedStatement stmt) throws SQLException {
-        try (ResultSet rs = stmt.executeQuery()) {
-            List<Program> programs = new ArrayList<>();
-            while (rs.next()) {
-                Program r = new Program();
-                r.setId(rs.getInt("id"));
-                r.setName(rs.getString("name"));
-                r.setGroupId(rs.getInt("group_id"));
-                r.setCoordinatorId(rs.getInt("coordinator_id"));
-                r.setCoordinatorName(rs.getString("coordinator_name"));
-                r.setRegistrations(rs.getInt("students"));
-                programs.add(r);
-            }
-            return programs;
-        }
+    @Override
+    protected Program processRow(ResultSet rs) throws SQLException {
+        Program p = new Program();
+        p.setId(rs.getInt("id"));
+        p.setName(rs.getString("name"));
+        p.setGroupId(rs.getInt("group_id"));
+        p.setCoordinatorId(rs.getInt("coordinator_id"));
+        p.setCoordinatorName(rs.getString("coordinator_name"));
+        p.setRegistrations(rs.getInt("students"));
+        return p;
     }
 }
