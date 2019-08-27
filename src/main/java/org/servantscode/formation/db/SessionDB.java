@@ -6,6 +6,7 @@ import org.servantscode.commons.db.EasyDB;
 import org.servantscode.commons.search.DeleteBuilder;
 import org.servantscode.commons.search.QueryBuilder;
 import org.servantscode.formation.Session;
+import org.servantscode.formation.SessionSeries;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -55,6 +56,21 @@ public class SessionDB extends EasyDB<Session> {
         QueryBuilder query = baseQuery()
                 .where("session_id=?", id).inOrg("e.org_id");
         return getOne(query);
+    }
+
+    public void createSeries(SessionSeries series) {
+        String sql = "INSERT INTO program_sessions (program_id, event_id) " +
+                     "SELECT ?, e.id FROM events e WHERE e.recurring_meeting_id=?";
+        try(Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, series.getProgramId());
+            stmt.setInt(2, series.getRecurrenceId());
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to link event sessions to program.", e);
+        }
     }
 
     public boolean delete(int id) {

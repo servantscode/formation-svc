@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.servantscode.commons.rest.PaginatedResponse;
 import org.servantscode.commons.rest.SCServiceBase;
 import org.servantscode.formation.Session;
+import org.servantscode.formation.SessionSeries;
 import org.servantscode.formation.db.SessionDB;
 
 import javax.ws.rs.*;
@@ -24,7 +25,7 @@ public class SessionSvc extends SCServiceBase {
     @GET @Produces(MediaType.APPLICATION_JSON)
     public PaginatedResponse<Session> getSessions(@PathParam("programId") int programId,
                                                   @QueryParam("start") @DefaultValue("0") int start,
-                                                  @QueryParam("count") @DefaultValue("10") int count,
+                                                  @QueryParam("count") @DefaultValue("-1") int count,
                                                   @QueryParam("sort_field") @DefaultValue("start_time") String sortField,
                                                   @QueryParam("search") @DefaultValue("") String search) {
 
@@ -44,6 +45,7 @@ public class SessionSvc extends SCServiceBase {
     @GET @Path("/{id}") @Produces(MediaType.APPLICATION_JSON)
     public Session getSession(@PathParam("programId") int programId,
                               @PathParam("id") int id) {
+
         verifyUserAccess("session.read");
         try {
             Session session = db.getById(id);
@@ -55,24 +57,23 @@ public class SessionSvc extends SCServiceBase {
             throw t;
         }
     }
-//
-//    @POST
-//    @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
-//    public Session createSession(@PathParam("programId") int programId,
-//                                 Session session) {
-//        verifyUserAccess("session.create");
-//        try {
-//            if(session.getProgramId() != programId)
-//                throw new BadRequestException();
-//            db.create(session);
-//            LOG.info("Created session: " + session.getName());
-//            return session;
-//        } catch (Throwable t) {
-//            LOG.error("Creating session failed:", t);
-//            throw t;
-//        }
-//    }
-//
+
+    @POST @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
+    public void createSession(@PathParam("programId") int programId,
+                                 SessionSeries series) {
+        verifyUserAccess("session.create");
+        try {
+            if(series.getProgramId() != programId)
+                throw new BadRequestException();
+
+            db.createSeries(series);
+            LOG.info("Created session series.");
+        } catch (Throwable t) {
+            LOG.error("Creating session failed:", t);
+            throw t;
+        }
+    }
+
 //    @PUT
 //    @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
 //    public Session updateSession(@PathParam("programId") int programId,
