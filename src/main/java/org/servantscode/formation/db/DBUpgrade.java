@@ -62,7 +62,7 @@ public class DBUpgrade extends AbstractDBUpgrade {
             LOG.info("-- Creating program sessions table");
             runSql("CREATE TABLE program_sessions(id SERIAL PRIMARY KEY, " +
                                          "program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE, " +
-                                         "event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE SET NULL)");
+                                         "event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE)");
         }
 
         if(!tableExists("attendance")) {
@@ -71,7 +71,7 @@ public class DBUpgrade extends AbstractDBUpgrade {
                                             "section_id INTEGER NOT NULL REFERENCES sections(id) ON DELETE CASCADE, " +
                                             "session_id INTEGER NOT NULL REFERENCES program_sessions(id) ON DELETE CASCADE, " +
                                             "attendance BOOLEAN NOT NULL," +
-                                            "PRIMARY_KEY (enrollee_id, section_id, session_id))");
+                                            "PRIMARY KEY (enrollee_id, section_id, session_id))");
         }
 
         // 8/22/19

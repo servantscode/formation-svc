@@ -25,7 +25,7 @@ public class SessionSvc extends SCServiceBase {
     @GET @Produces(MediaType.APPLICATION_JSON)
     public PaginatedResponse<Session> getSessions(@PathParam("programId") int programId,
                                                   @QueryParam("start") @DefaultValue("0") int start,
-                                                  @QueryParam("count") @DefaultValue("-1") int count,
+                                                  @QueryParam("count") @DefaultValue("10") int count,
                                                   @QueryParam("sort_field") @DefaultValue("start_time") String sortField,
                                                   @QueryParam("search") @DefaultValue("") String search) {
 
