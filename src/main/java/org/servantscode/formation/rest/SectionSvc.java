@@ -33,7 +33,7 @@ public class SectionSvc extends SCServiceBase {
                                                   @QueryParam("sort_field") @DefaultValue("name") String sortField,
                                                   @QueryParam("search") @DefaultValue("") String search) {
 
-        verifyUserAccess("section.list");
+        verifyUserAccess("program.section.list");
         try {
             int totalPeople = db.getCount(search);
 
@@ -49,7 +49,7 @@ public class SectionSvc extends SCServiceBase {
     @GET @Path("/{id}") @Produces(MediaType.APPLICATION_JSON)
     public Section getSection(@PathParam("programId") int programId,
                               @PathParam("id") int id) {
-        verifyUserAccess("section.read");
+        verifyUserAccess("program.section.read");
         try {
             Section section = db.getById(id);
             if(section.getProgramId() != programId)
@@ -66,7 +66,7 @@ public class SectionSvc extends SCServiceBase {
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Section createSection(@PathParam("programId") int programId,
                                  Section section) {
-        verifyUserAccess("section.create");
+        verifyUserAccess("program.section.create");
         try {
             if(section.getProgramId() != programId)
                 throw new BadRequestException();
@@ -83,7 +83,7 @@ public class SectionSvc extends SCServiceBase {
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Section updateSection(@PathParam("programId") int programId,
                                  Section section) {
-        verifyUserAccess("section.update");
+        verifyUserAccess("program.section.update");
 
         if(section.getProgramId() != programId)
             throw new BadRequestException();
@@ -101,7 +101,7 @@ public class SectionSvc extends SCServiceBase {
     @DELETE @Path("/{id}")
     public void deleteSection(@PathParam("programId") int programId,
                               @PathParam("id") int id) {
-        verifyUserAccess("section.delete");
+        verifyUserAccess("program.section.delete");
         if(id <= 0)
             throw new NotFoundException();
         try {

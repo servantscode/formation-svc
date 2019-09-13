@@ -25,7 +25,7 @@ public class AttendanceSvc extends SCServiceBase {
     public Attendance getAttendance(@PathParam("programId") int programId,
                                     @PathParam("sectionId") int sectionId) {
 
-        verifyUserAccess("attendance.read");
+        verifyUserAccess("program.attendance.read");
         if (programId <= 0 || sectionId <= 0)
             throw new NotFoundException();
 
@@ -47,7 +47,7 @@ public class AttendanceSvc extends SCServiceBase {
     public Attendance recordSectionAttendance(@PathParam("programId") int programId,
                                               @PathParam("sectionId") int sectionId,
                                               SessionAttendance attendance) {
-        verifyUserAccess("attendance.create");
+        verifyUserAccess("program.attendance.create");
         if (programId <= 0 || sectionId <= 0)
             throw new NotFoundException();
 

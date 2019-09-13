@@ -29,7 +29,7 @@ public class SessionSvc extends SCServiceBase {
                                                   @QueryParam("sort_field") @DefaultValue("start_time") String sortField,
                                                   @QueryParam("search") @DefaultValue("") String search) {
 
-        verifyUserAccess("session.list");
+        verifyUserAccess("program.session.list");
         try {
             int totalPeople = db.getCount(search, programId);
 
@@ -46,7 +46,7 @@ public class SessionSvc extends SCServiceBase {
     public Session getSession(@PathParam("programId") int programId,
                               @PathParam("id") int id) {
 
-        verifyUserAccess("session.read");
+        verifyUserAccess("program.session.read");
         try {
             Session session = db.getById(id);
             if(session.getProgramId() != programId)
@@ -61,7 +61,7 @@ public class SessionSvc extends SCServiceBase {
     @POST @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public void createSession(@PathParam("programId") int programId,
                                  SessionSeries series) {
-        verifyUserAccess("session.create");
+        verifyUserAccess("program.session.create");
         try {
             if(series.getProgramId() != programId)
                 throw new BadRequestException();
@@ -78,7 +78,7 @@ public class SessionSvc extends SCServiceBase {
 //    @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
 //    public Session updateSession(@PathParam("programId") int programId,
 //                                 Session session) {
-//        verifyUserAccess("session.update");
+//        verifyUserAccess("program.session.update");
 //
 //        if(session.getProgramId() != programId)
 //            throw new BadRequestException();
@@ -96,7 +96,7 @@ public class SessionSvc extends SCServiceBase {
     @DELETE @Path("/{id}")
     public void deleteSession(@PathParam("programId") int programId,
                               @PathParam("id") int id) {
-        verifyUserAccess("session.delete");
+        verifyUserAccess("program.session.delete");
         if(id <= 0)
             throw new NotFoundException();
 

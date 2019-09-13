@@ -28,7 +28,7 @@ public class RegistrationSvc extends SCServiceBase {
                                                             @QueryParam("sort_field") @DefaultValue("enrollee_name") String sortField,
                                                             @QueryParam("search") @DefaultValue("") String nameSearch) {
 
-        verifyUserAccess("registration.list");
+        verifyUserAccess("program.registration.list");
         try {
             int totalPeople = db.getCount(nameSearch);
 
@@ -43,7 +43,7 @@ public class RegistrationSvc extends SCServiceBase {
 
     @GET @Path("/{id}") @Produces(MediaType.APPLICATION_JSON)
     public Registration getRegistration(@PathParam("id") int id) {
-        verifyUserAccess("registration.read");
+        verifyUserAccess("program.registration.read");
         try {
             return db.getRegistration(id);
         } catch (Throwable t) {
@@ -56,7 +56,7 @@ public class RegistrationSvc extends SCServiceBase {
     @POST
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Registration createRegistration(Registration registration) {
-        verifyUserAccess("registration.create");
+        verifyUserAccess("program.registration.create");
         try {
             db.create(registration);
             LOG.info("Created registration: " + registration.getEnrolleeId());
@@ -70,7 +70,7 @@ public class RegistrationSvc extends SCServiceBase {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Registration updateRegistration(Registration registration) {
-        verifyUserAccess("registration.update");
+        verifyUserAccess("program.registration.update");
         try {
             db.updateRegistration(registration);
             LOG.info("Edited registration: " + registration.getEnrolleeId());
@@ -83,7 +83,7 @@ public class RegistrationSvc extends SCServiceBase {
 
     @DELETE @Path("/{id}")
     public void deleteRegistration(@PathParam("id") int id) {
-        verifyUserAccess("registration.delete");
+        verifyUserAccess("program.registration.delete");
         if(id <= 0)
             throw new NotFoundException();
         try {
