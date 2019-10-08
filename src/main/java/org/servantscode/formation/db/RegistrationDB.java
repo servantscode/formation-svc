@@ -10,7 +10,6 @@ import org.servantscode.formation.Registration;
 
 import java.sql.*;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -64,7 +63,7 @@ public class RegistrationDB extends EasyDB<Registration> {
                 .value("enrollee_id", registration.getEnrolleeId())
                 .value("program_id", registration.getProgramId())
                 .value("section_id", registration.getSectionId())
-                .value("grade", registration.getGrade())
+                .value("school_grade", registration.getSchoolGrade())
                 .value("sacramental_group_id", registration.getSacramentalGroupId());
         registration.setId(createAndReturnKey(cmd));
         return registration;
@@ -75,7 +74,7 @@ public class RegistrationDB extends EasyDB<Registration> {
                 .value("enrollee_id", registration.getEnrolleeId())
                 .value("program_id", registration.getProgramId())
                 .value("section_id", registration.getSectionId())
-                .value("grade", registration.getGrade())
+                .value("school_grade", registration.getSchoolGrade())
                 .value("sacramental_group_id", registration.getSacramentalGroupId())
                 .withId(registration.getId());
         if (!update(cmd))
@@ -101,7 +100,7 @@ public class RegistrationDB extends EasyDB<Registration> {
         int years = today.getYear() - birthdate.getYear();
         if( today.getDayOfYear() < birthdate.getDayOfYear()) years--;
         r.setEnrolleeAge(years);
-        r.setGrade(rs.getInt("grade"));
+        r.setSchoolGrade(rs.getString("school_grade"));
         r.setSacramentalGroupId(rs.getInt("sacramental_group_id"));
         r.setSacramentalGroupName(rs.getString("sg_name"));
         return r;

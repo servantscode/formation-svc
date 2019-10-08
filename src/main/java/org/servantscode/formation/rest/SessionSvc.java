@@ -60,7 +60,7 @@ public class SessionSvc extends SCServiceBase {
 
     @POST @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public void createSession(@PathParam("programId") int programId,
-                                 SessionSeries series) {
+                              SessionSeries series) {
         verifyUserAccess("program.session.create");
         try {
             if(series.getProgramId() != programId)

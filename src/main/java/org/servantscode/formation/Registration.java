@@ -8,7 +8,7 @@ public class Registration {
     private int sectionId;
     private String sectionName;
     private int enrolleeAge;
-    private int grade;
+    private String schoolGrade;
     private int sacramentalGroupId;
     private String sacramentalGroupName;
 
@@ -34,8 +34,8 @@ public class Registration {
     public int getEnrolleeAge() { return enrolleeAge; }
     public void setEnrolleeAge(int enrolleeAge) { this.enrolleeAge = enrolleeAge; }
 
-    public int getGrade() { return grade; }
-    public void setGrade(int grade) { this.grade = grade; }
+    public String getSchoolGrade() { return schoolGrade; }
+    public void setSchoolGrade(String schoolGrade) { this.schoolGrade = schoolGrade; }
 
     public int getSacramentalGroupId() { return sacramentalGroupId; }
     public void setSacramentalGroupId(int sacramentalGroupId) { this.sacramentalGroupId = sacramentalGroupId; }

@@ -54,7 +54,7 @@ public class DBUpgrade extends AbstractDBUpgrade {
                                               "enrollee_id INTEGER REFERENCES people(id) ON DELETE CASCADE, " +
                                               "program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE, " +
                                               "section_id INTEGER REFERENCES sections(id) ON DELETE SET NULL, " +
-                                              "grade INTEGER, " +
+                                              "grade TEXT, " +
                                               "sacramental_group_id INTEGER REFERENCES sacramental_groups(id) ON DELETE SET NULL)");
         }
 
@@ -81,6 +81,12 @@ public class DBUpgrade extends AbstractDBUpgrade {
 
         if(!columnExists("registrations", "program_id")) {
             runSql("ALTER TABLE registrations ADD COLUMN program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE");
+        }
+
+        if(!columnExists("registrations", "school_grade")) {
+            runSql("ALTER TABLE registrations ADD COLUMN school_grade TEXT");
+            runSql("UPDATE registrations SET school_grade=grade");
+            runSql("ALTER TABLE registrations DROP COLUMN grade");
         }
     }
 }
