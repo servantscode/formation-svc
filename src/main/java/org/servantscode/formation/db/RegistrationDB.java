@@ -20,11 +20,11 @@ public class RegistrationDB extends EasyDB<Registration> {
 
     private static final HashMap<String, String> FIELD_MAP = new HashMap<>(8);
     static {
-        FIELD_MAP.put("enrolleeName", "enrollee_name");
+        FIELD_MAP.put("enrolleeName", "p.name");
     }
 
     public RegistrationDB() {
-        super(Registration.class, "enrollee_name", FIELD_MAP);
+        super(Registration.class, "enrolleeName", FIELD_MAP);
     }
 
     private QueryBuilder joinTables(QueryBuilder selecton) {
