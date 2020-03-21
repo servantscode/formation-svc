@@ -11,7 +11,9 @@ import org.servantscode.formation.Registration;
 import java.sql.*;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("SqlNoDataSourceInspection")
 public class RegistrationDB extends EasyDB<Registration> {
@@ -29,15 +31,15 @@ public class RegistrationDB extends EasyDB<Registration> {
 
     private QueryBuilder joinTables(QueryBuilder selecton) {
         return selecton.from("registrations r")
-                .join("LEFT JOIN people p ON p.id=r.enrollee_id")
-                .join("LEFT JOIN sections s ON s.id=r.section_id")
-                .join("LEFT JOIN sacramental_groups sg ON sg.id=r.sacramental_group_id");
+                .leftJoin("people p ON p.id=r.enrollee_id")
+                .leftJoin("sections s ON s.id=r.section_id")
+                .leftJoin("sacramental_groups sg ON sg.id=r.sacramental_group_id");
     }
 
     private QueryBuilder data() {
         QueryBuilder selections = select("r.*")
                                  .select("p.name AS enrollee_name")
-                                 .select(" p.birthdate AS birthdate")
+                                 .select("p.birthdate AS birthdate")
                                  .select("s.name AS section_name")
                                  .select("sg.name AS sg_name");
         return joinTables(selections).inOrg("p.org_id");

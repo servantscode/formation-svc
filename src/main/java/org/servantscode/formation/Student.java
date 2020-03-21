@@ -2,7 +2,7 @@ package org.servantscode.formation;
 
 import java.util.List;
 
-public class Registration {
+public class Student {
     private int id;
     private int enrolleeId;
     private String enrolleeName;
@@ -13,6 +13,9 @@ public class Registration {
     private String schoolGrade;
     private int sacramentalGroupId;
     private String sacramentalGroupName;
+    private List<String> parentNames;
+    private List<String> parentPhones;
+    private List<String> allergies;
 
     // ----- Accessors -----
     public int getId() { return id; }
@@ -44,4 +47,13 @@ public class Registration {
 
     public String getSacramentalGroupName() { return sacramentalGroupName; }
     public void setSacramentalGroupName(String sacramentalGroupName) { this.sacramentalGroupName = sacramentalGroupName; }
+
+    public List<String> getParentNames() { return parentNames; }
+    public void setParentNames(List<String> parentNames) { this.parentNames = parentNames; }
+
+    public List<String> getParentPhones() { return parentPhones; }
+    public void setParentPhones(List<String> parentPhones) { this.parentPhones = parentPhones; }
+
+    public List<String> getAllergies() { return allergies; }
+    public void setAllergies(List<String> allergies) { this.allergies = allergies; }
 }

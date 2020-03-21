@@ -2,23 +2,46 @@ package org.servantscode.formation.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.servantscode.client.ApiClientFactory;
+import org.servantscode.commons.pdf.PdfWriter;
+import org.servantscode.commons.pdf.PdfWriter.SpecialColumns;
 import org.servantscode.commons.rest.PaginatedResponse;
 import org.servantscode.commons.rest.SCServiceBase;
 import org.servantscode.formation.Program;
+import org.servantscode.formation.Registration;
+import org.servantscode.formation.Section;
+import org.servantscode.formation.Student;
 import org.servantscode.formation.db.ProgramDB;
+import org.servantscode.formation.db.RegistrationDB;
+import org.servantscode.formation.db.SectionDB;
+import org.servantscode.formation.db.StudentDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.lang.String.join;
+import static org.servantscode.commons.pdf.PdfWriter.Alignment.CENTER;
+import static org.servantscode.commons.pdf.PdfWriter.Alignment.LEFT;
 
 @Path("/program")
 public class ProgramSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(ProgramSvc.class);
 
     private ProgramDB db;
+    private SectionDB sectionDb;
+    private StudentDB studentDb;
 
     public ProgramSvc() {
         db = new ProgramDB();
+        sectionDb = new SectionDB();
+        studentDb = new StudentDB();
     }
 
     @GET @Produces(MediaType.APPLICATION_JSON)
@@ -94,5 +117,63 @@ public class ProgramSvc extends SCServiceBase {
             LOG.error("Deleting program failed:", t);
             throw t;
         }
+    }
+
+    @GET @Path("/{id}/attendanceSheets") @Produces("application/pdf")
+    public Response generateAttendanceSheets(@PathParam("id") int id) {
+        verifyUserAccess("donation.read");
+        try {
+            ApiClientFactory.instance().authenticateAsSystem();
+            final List<Section> sections = sectionDb.getProgramSections(id);
+            final Map<Integer, List<Student>> classAssignments = studentDb.getProgramClassAssignments(id);
+
+            StreamingOutput stream = output -> {
+                createAttendanceSheets(sections, classAssignments, output);
+            };
+
+            return Response.ok(stream).build();
+
+        } catch(Throwable t) {
+            LOG.error("Retrieving annual report failed:", t);
+            throw t;
+        }
+
+    }
+
+    private void createAttendanceSheets(List<Section> sections, Map<Integer, List<Student>> classAssignments, OutputStream output) {
+        try (PdfWriter writer = new PdfWriter()) {
+            for(int i=0; i< sections.size(); i++){
+                Section section = sections.get(i);
+                createAttendanceSheet(section, classAssignments.get(section.getId()), i+1, writer);
+            }
+
+            writer.writeToStream(output);
+        } catch (Throwable t) {
+            LOG.error("Failed to create pdf document for annual report", t);
+            throw new WebApplicationException("Failed to create annual report pdf", t);
+        }
+    }
+
+    private void createAttendanceSheet(Section s, List<Student> students, int pageNumber, PdfWriter writer) throws IOException {
+        if(pageNumber > 1) writer.newPage();
+
+        writer.beginText();
+        writer.setFontSize(20);
+        writer.addLine(s.getInstructorName());
+        writer.addBlankSpace(0.5f);
+
+        writer.setFontSize(12);
+        writer.addLine("Class: " + s.getName());
+        writer.addLine("Room: " + s.getRoomName());
+        writer.addBlankLine();
+
+        writer.startTable(new int[] {20, 160, 160, 80, 120}, new PdfWriter.Alignment[] {CENTER, LEFT, LEFT, LEFT, LEFT});
+        writer.addTableHeader("Attd.", "Student", "Contact", "Phone #", "Allergies");
+        for(Student student: students) {
+            writer.addTableRow(SpecialColumns.CHECKBOX, student.getEnrolleeName(), student.getParentNames().get(0),
+                               student.getParentPhones().get(0), join(", ", student.getAllergies()));
+        }
+
+        writer.endText();
     }
 }

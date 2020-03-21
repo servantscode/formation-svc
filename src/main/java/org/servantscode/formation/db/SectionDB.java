@@ -58,6 +58,10 @@ public class SectionDB extends EasyDB<Section> {
         return getOne(select(data()).where("s.id=?", id));
     }
 
+    public List<Section> getProgramSections(int programId) {
+        return get(select(data()).where("s.program_id=?", programId));
+    }
+
     public Section create(Section section) {
         InsertBuilder cmd = new InsertBuilder().into("sections")
                 .value("name", section.getName())
@@ -106,4 +110,5 @@ public class SectionDB extends EasyDB<Section> {
         s.setComplete(rs.getBoolean("complete"));
         return s;
     }
+
 }
