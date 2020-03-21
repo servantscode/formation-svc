@@ -43,8 +43,8 @@ public class RegistrationDB extends EasyDB<Registration> {
         return joinTables(selections).inOrg("p.org_id");
     }
 
-    public int getCount(String search) {
-        return getCount(joinTables(count()).search(searchParser.parse(search)).inOrg("p.org_id"));
+    public int getCount(String search, int programId) {
+        return getCount(joinTables(count()).search(searchParser.parse(search)).with("r.program_id", programId).inOrg("p.org_id"));
     }
 
     public Registration getRegistration(int id) {

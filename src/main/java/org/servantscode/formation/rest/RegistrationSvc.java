@@ -26,13 +26,13 @@ public class RegistrationSvc extends SCServiceBase {
                                                             @QueryParam("start") @DefaultValue("0") int start,
                                                             @QueryParam("count") @DefaultValue("10") int count,
                                                             @QueryParam("sort_field") @DefaultValue("enrollee_name") String sortField,
-                                                            @QueryParam("search") @DefaultValue("") String nameSearch) {
+                                                            @QueryParam("search") @DefaultValue("") String search) {
 
         verifyUserAccess("program.registration.list");
         try {
-            int totalPeople = db.getCount(nameSearch);
+            int totalPeople = db.getCount(search, programId);
 
-            List<Registration> results = db.getRegistrations(nameSearch, sortField, start, count, programId);
+            List<Registration> results = db.getRegistrations(search, sortField, start, count, programId);
 
             return new PaginatedResponse<>(start, results.size(), totalPeople, results);
         } catch (Throwable t) {
