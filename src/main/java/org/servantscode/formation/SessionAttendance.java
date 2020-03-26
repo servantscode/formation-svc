@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class SessionAttendance {
     private int programId;
-    private int sectionId;
+    private int classroomId;
     private int sessionId;
     private Map<Integer, Boolean> enrolleeAttendance;
 
@@ -14,8 +14,8 @@ public class SessionAttendance {
     public int getProgramId() { return programId; }
     public void setProgramId(int programId) { this.programId = programId; }
 
-    public int getSectionId() { return sectionId; }
-    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+    public int getClassroomId() { return classroomId; }
+    public void setClassroomId(int classroomId) { this.classroomId = classroomId; }
 
     public int getSessionId() { return sessionId; }
     public void setSessionId(int sessionId) { this.sessionId = sessionId; }

@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SessionDB extends EasyDB<Session> {
-    private static final Logger LOG = LogManager.getLogger(SectionDB.class);
+    private static final Logger LOG = LogManager.getLogger(ClassroomDB.class);
 
     private static final HashMap<String, String> FIELD_MAP = new HashMap<>(8);
     static {

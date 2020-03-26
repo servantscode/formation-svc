@@ -32,7 +32,7 @@ public class RegistrationDB extends EasyDB<Registration> {
     private QueryBuilder joinTables(QueryBuilder selecton) {
         return selecton.from("registrations r")
                 .leftJoin("people p ON p.id=r.enrollee_id")
-                .leftJoin("sections s ON s.id=r.section_id")
+                .leftJoin("classrooms s ON s.id=r.classroom_id")
                 .leftJoin("sacramental_groups sg ON sg.id=r.sacramental_group_id");
     }
 
@@ -40,7 +40,7 @@ public class RegistrationDB extends EasyDB<Registration> {
         QueryBuilder selections = select("r.*")
                                  .select("p.name AS enrollee_name")
                                  .select("p.birthdate AS birthdate")
-                                 .select("s.name AS section_name")
+                                 .select("s.name AS classroom_name")
                                  .select("sg.name AS sg_name");
         return joinTables(selections).inOrg("p.org_id");
     }
@@ -64,7 +64,7 @@ public class RegistrationDB extends EasyDB<Registration> {
         InsertBuilder cmd = insertInto("registrations")
                 .value("enrollee_id", registration.getEnrolleeId())
                 .value("program_id", registration.getProgramId())
-                .value("section_id", registration.getSectionId())
+                .value("classroom_id", registration.getClassroomId())
                 .value("school_grade", registration.getSchoolGrade())
                 .value("sacramental_group_id", registration.getSacramentalGroupId());
         registration.setId(createAndReturnKey(cmd));
@@ -75,7 +75,7 @@ public class RegistrationDB extends EasyDB<Registration> {
         UpdateBuilder cmd = update("registrations")
                 .value("enrollee_id", registration.getEnrolleeId())
                 .value("program_id", registration.getProgramId())
-                .value("section_id", registration.getSectionId())
+                .value("classroom_id", registration.getClassroomId())
                 .value("school_grade", registration.getSchoolGrade())
                 .value("sacramental_group_id", registration.getSacramentalGroupId())
                 .withId(registration.getId());
@@ -95,8 +95,8 @@ public class RegistrationDB extends EasyDB<Registration> {
         r.setEnrolleeId(rs.getInt("enrollee_id"));
         r.setEnrolleeName(rs.getString("enrollee_name"));
         r.setProgramId(rs.getInt("program_id"));
-        r.setSectionId(rs.getInt("section_id"));
-        r.setSectionName(rs.getString("section_name"));
+        r.setClassroomId(rs.getInt("classroom_id"));
+        r.setClassroomName(rs.getString("classroom_name"));
         ZonedDateTime birthdate = convert(rs.getTimestamp("birthdate"));
         ZonedDateTime today = ZonedDateTime.now();
         int years = today.getYear() - birthdate.getYear();

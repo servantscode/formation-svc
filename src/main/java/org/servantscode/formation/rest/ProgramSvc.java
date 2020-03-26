@@ -7,13 +7,11 @@ import org.servantscode.commons.pdf.PdfWriter;
 import org.servantscode.commons.pdf.PdfWriter.SpecialColumns;
 import org.servantscode.commons.rest.PaginatedResponse;
 import org.servantscode.commons.rest.SCServiceBase;
+import org.servantscode.formation.Classroom;
 import org.servantscode.formation.Program;
-import org.servantscode.formation.Registration;
-import org.servantscode.formation.Section;
 import org.servantscode.formation.Student;
 import org.servantscode.formation.db.ProgramDB;
-import org.servantscode.formation.db.RegistrationDB;
-import org.servantscode.formation.db.SectionDB;
+import org.servantscode.formation.db.ClassroomDB;
 import org.servantscode.formation.db.StudentDB;
 
 import javax.ws.rs.*;
@@ -24,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.lang.String.join;
 import static org.servantscode.commons.pdf.PdfWriter.Alignment.CENTER;
@@ -35,12 +32,12 @@ public class ProgramSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(ProgramSvc.class);
 
     private ProgramDB db;
-    private SectionDB sectionDb;
+    private ClassroomDB classroomDb;
     private StudentDB studentDb;
 
     public ProgramSvc() {
         db = new ProgramDB();
-        sectionDb = new SectionDB();
+        classroomDb = new ClassroomDB();
         studentDb = new StudentDB();
     }
 
@@ -124,11 +121,11 @@ public class ProgramSvc extends SCServiceBase {
         verifyUserAccess("donation.read");
         try {
             ApiClientFactory.instance().authenticateAsSystem();
-            final List<Section> sections = sectionDb.getProgramSections(id);
+            final List<Classroom> classrooms = classroomDb.getProgramClassrooms(id);
             final Map<Integer, List<Student>> classAssignments = studentDb.getProgramClassAssignments(id);
 
             StreamingOutput stream = output -> {
-                createAttendanceSheets(sections, classAssignments, output);
+                createAttendanceSheets(classrooms, classAssignments, output);
             };
 
             return Response.ok(stream).build();
@@ -140,11 +137,11 @@ public class ProgramSvc extends SCServiceBase {
 
     }
 
-    private void createAttendanceSheets(List<Section> sections, Map<Integer, List<Student>> classAssignments, OutputStream output) {
+    private void createAttendanceSheets(List<Classroom> classrooms, Map<Integer, List<Student>> classAssignments, OutputStream output) {
         try (PdfWriter writer = new PdfWriter()) {
-            for(int i=0; i< sections.size(); i++){
-                Section section = sections.get(i);
-                createAttendanceSheet(section, classAssignments.get(section.getId()), i+1, writer);
+            for(int i = 0; i< classrooms.size(); i++){
+                Classroom classroom = classrooms.get(i);
+                createAttendanceSheet(classroom, classAssignments.get(classroom.getId()), i+1, writer);
             }
 
             writer.writeToStream(output);
@@ -154,7 +151,7 @@ public class ProgramSvc extends SCServiceBase {
         }
     }
 
-    private void createAttendanceSheet(Section s, List<Student> students, int pageNumber, PdfWriter writer) throws IOException {
+    private void createAttendanceSheet(Classroom s, List<Student> students, int pageNumber, PdfWriter writer) throws IOException {
         if(pageNumber > 1) writer.newPage();
 
         writer.beginText();

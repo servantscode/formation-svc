@@ -8,16 +8,15 @@ import org.servantscode.commons.search.InsertBuilder;
 import org.servantscode.commons.search.QueryBuilder;
 import org.servantscode.commons.search.UpdateBuilder;
 import org.servantscode.commons.security.OrganizationContext;
-import org.servantscode.formation.Section;
+import org.servantscode.formation.Classroom;
 
 import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("SqlNoDataSourceInspection")
-public class SectionDB extends EasyDB<Section> {
-    private static final Logger LOG = LogManager.getLogger(SectionDB.class);
+public class ClassroomDB extends EasyDB<Classroom> {
+    private static final Logger LOG = LogManager.getLogger(ClassroomDB.class);
 
     private static final HashMap<String, String> FIELD_MAP = new HashMap<>(8);
     static {
@@ -27,15 +26,15 @@ public class SectionDB extends EasyDB<Section> {
         FIELD_MAP.put("roomId", "room_id");
     }
 
-    public SectionDB() {
-        super(Section.class, "name", FIELD_MAP);
+    public ClassroomDB() {
+        super(Classroom.class, "name", FIELD_MAP);
     }
 
     private QueryBuilder select(QueryBuilder selection) {
-        return selection.from("sections s")
+        return selection.from("classrooms s")
                 .leftJoin("people p ON p.id=s.instructor_id")
                 .leftJoin("rooms r ON r.id=s.room_id")
-                .leftJoin("(SELECT section_id, count(section_id) AS students FROM registrations GROUP BY section_id) reg ON s.id=reg.section_id")
+                .leftJoin("(SELECT classroom_id, count(classroom_id) AS students FROM registrations GROUP BY classroom_id) reg ON s.id=reg.classroom_id")
                 .inOrg("s.org_id");
     }
 
@@ -43,62 +42,64 @@ public class SectionDB extends EasyDB<Section> {
         return select("s.*", "p.name AS instructor_name", "r.name AS room_name", "reg.students");
     }
 
-    public int getCount(String search) {
-        return getCount(select(count()).search(searchParser.parse(search)));
+    public int getCount(String search, int programId) {
+        return getCount(select(count())
+                .search(searchParser.parse(search))
+                .with("program_id", programId));
     }
 
-    public List<Section> get(String search, String sortField, int start, int count, int programId) {
+    public List<Classroom> get(String search, String sortField, int start, int count, int programId) {
         QueryBuilder query =  select(data()).search(searchParser.parse(search))
-                .where("program_id=?", programId)
+                .with("program_id", programId)
                 .page(sortField, start, count);
         return get(query);
     }
 
-    public Section getById(int id) {
+    public Classroom getById(int id) {
         return getOne(select(data()).where("s.id=?", id));
     }
 
-    public List<Section> getProgramSections(int programId) {
+    public List<Classroom> getProgramClassrooms(int programId) {
         return get(select(data()).where("s.program_id=?", programId));
     }
 
-    public Section create(Section section) {
-        InsertBuilder cmd = new InsertBuilder().into("sections")
-                .value("name", section.getName())
-                .value("program_id", section.getProgramId())
-                .value("instructor_id", section.getInstructorId())
-                .value("room_id", section.getRoomId())
+    public Classroom create(Classroom classroom) {
+        InsertBuilder cmd = new InsertBuilder().into("classrooms")
+                .value("name", classroom.getName())
+                .value("program_id", classroom.getProgramId())
+                .value("instructor_id", classroom.getInstructorId())
+                .value("room_id", classroom.getRoomId())
                 .value("org_id", OrganizationContext.orgId());
-        section.setId(createAndReturnKey(cmd));
-        return section;
+        classroom.setId(createAndReturnKey(cmd));
+        return classroom;
     }
 
-    public Section updateSection(Section section) {
-        UpdateBuilder cmd = new UpdateBuilder().update("sections")
-                .value("name", section.getName())
-                .value("program_id", section.getProgramId())
-                .value("instructor_id", section.getInstructorId())
-                .value("room_id", section.getRoomId())
-                .value("complete", section.isComplete())
-                .where("id=?", section.getId())
+    public Classroom updateClassroom(Classroom classroom) {
+        UpdateBuilder cmd = new UpdateBuilder().update("classrooms")
+                .value("name", classroom.getName())
+                .value("program_id", classroom.getProgramId())
+                .value("instructor_id", classroom.getInstructorId())
+                .value("room_id", classroom.getRoomId())
+                .value("complete", classroom.isComplete())
+                .where("id=?", classroom.getId())
                 .where("org_id=?", OrganizationContext.orgId());
 
         if(!update(cmd))
-            throw new RuntimeException("Failed to update section: " + section.getName());
+            throw new RuntimeException("Failed to update classroom: " + classroom.getName());
 
-        return section;
+        return classroom;
     }
 
-    public boolean deleteSection(int id) {
-        DeleteBuilder cmd = new DeleteBuilder().delete("sections")
+    public boolean deleteClassroom(int id) {
+        DeleteBuilder cmd = new DeleteBuilder().delete("classrooms")
                 .withId(id).inOrg();
 
         return delete(cmd);
     }
 
     @Override
-    protected Section processRow(ResultSet rs) throws SQLException {
-        Section s = new Section();
+    protected Classroom processRow(ResultSet rs) throws SQLException {
+        Classroom s = new Classroom();
         s.setId(rs.getInt("id"));
         s.setName(rs.getString("name"));
         s.setProgramId(rs.getInt("program_id"));

@@ -1,6 +1,6 @@
 package org.servantscode.formation;
 
-public class Section {
+public class Classroom {
     private int id;
     private String name;
     private int programId;

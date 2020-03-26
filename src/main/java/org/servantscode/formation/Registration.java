@@ -7,8 +7,8 @@ public class Registration {
     private int enrolleeId;
     private String enrolleeName;
     private int programId;
-    private int sectionId;
-    private String sectionName;
+    private int classroomId;
+    private String classroomName;
     private int enrolleeAge;
     private String schoolGrade;
     private int sacramentalGroupId;
@@ -27,11 +27,11 @@ public class Registration {
     public int getProgramId() { return programId; }
     public void setProgramId(int programId) { this.programId = programId; }
 
-    public int getSectionId() { return sectionId; }
-    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+    public int getClassroomId() { return classroomId; }
+    public void setClassroomId(int classroomId) { this.classroomId = classroomId; }
 
-    public String getSectionName() { return sectionName; }
-    public void setSectionName(String sectionName) { this.sectionName = sectionName; }
+    public String getClassroomName() { return classroomName; }
+    public void setClassroomName(String classroomName) { this.classroomName = classroomName; }
 
     public int getEnrolleeAge() { return enrolleeAge; }
     public void setEnrolleeAge(int enrolleeAge) { this.enrolleeAge = enrolleeAge; }

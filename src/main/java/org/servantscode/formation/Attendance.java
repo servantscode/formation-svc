@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Attendance {
     private int programId;
-    private int sectionId;
+    private int classroomId;
     private List<Session> sessions;
     private List<EnrolleeAttendance> attendance;
 
@@ -17,8 +17,8 @@ public class Attendance {
     public int getProgramId() { return programId; }
     public void setProgramId(int programId) { this.programId = programId; }
 
-    public int getSectionId() { return sectionId; }
-    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+    public int getClassroomId() { return classroomId; }
+    public void setClassroomId(int classroomId) { this.classroomId = classroomId; }
 
     public List<Session> getSessions() { return sessions; }
     public void setSessions(List<Session> sessions) { this.sessions = sessions; }
