@@ -36,9 +36,10 @@ public class CatechistDB extends EasyDB<Catechist> {
     private QueryBuilder select(QueryBuilder selection) {
         return selection.from("catechists c")
                 .leftJoin("people p ON p.id=c.id")
-                .leftJoin("people_phone_numbers pn ON p.id=pn.person_id AND pn.is_primary")
+                .leftJoin("programs prog ON prog.id=c.program_id")
+                .leftJoin("person_phone_numbers pn ON p.id=pn.person_id AND pn.is_primary")
                 .leftJoin("classrooms r ON r.id=c.classroom_id")
-                .inOrg("r.org_id");
+                .inOrg("prog.org_id");
     }
 
     private QueryBuilder data() {
@@ -48,12 +49,12 @@ public class CatechistDB extends EasyDB<Catechist> {
     public int getCount(String search, int programId) {
         return getCount(select(count())
                 .search(searchParser.parse(search))
-                .with("program_id", programId));
+                .with("c.program_id", programId));
     }
 
     public List<Catechist> get(String search, String sortField, int start, int count, int programId) {
         QueryBuilder query =  select(data()).search(searchParser.parse(search))
-                .with("program_id", programId)
+                .with("c.program_id", programId)
                 .page(sortField, start, count);
         return get(query);
     }

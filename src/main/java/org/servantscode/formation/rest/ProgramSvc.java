@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.lang.String.join;
 import static org.servantscode.commons.pdf.PdfWriter.Alignment.CENTER;
@@ -160,6 +161,11 @@ public class ProgramSvc extends SCServiceBase {
         writer.addBlankSpace(0.5f);
 
         writer.setFontSize(12);
+        if(s.getAdditionalInstructorNames().size() > 0) {
+            writer.addLine("Assistants: " + String.join(", ", s.getAdditionalInstructorNames()));
+            writer.addBlankLine();
+        }
+
         writer.addLine("Class: " + s.getName());
         writer.addLine("Room: " + s.getRoomName());
         writer.addBlankLine();
@@ -167,8 +173,10 @@ public class ProgramSvc extends SCServiceBase {
         writer.startTable(new int[] {20, 160, 160, 80, 120}, new PdfWriter.Alignment[] {CENTER, LEFT, LEFT, LEFT, LEFT});
         writer.addTableHeader("Attd.", "Student", "Contact", "Phone #", "Allergies");
         for(Student student: students) {
-            writer.addTableRow(SpecialColumns.CHECKBOX, student.getEnrolleeName(), student.getParentNames().get(0),
-                               student.getParentPhones().get(0), join(", ", student.getAllergies()));
+            writer.addTableRow(SpecialColumns.CHECKBOX, student.getEnrolleeName(),
+                               student.getParentNames().isEmpty()? "": student.getParentNames().get(0),
+                               student.getParentPhones().isEmpty()? "": student.getParentPhones().get(0),
+                               join(", ", student.getAllergies()));
         }
 
         writer.endText();

@@ -1,11 +1,16 @@
 package org.servantscode.formation;
 
+import java.util.List;
+
 public class Classroom {
     private int id;
     private String name;
     private int programId;
     private int instructorId;
     private String instructorName;
+    private List<Integer> additionalInstructorIds;
+    private List<String> additionalInstructorNames;
+    private List<String> instructorEmails;
     private int roomId;
     private String roomName;
     private int studentCount;
@@ -26,6 +31,15 @@ public class Classroom {
 
     public String getInstructorName() { return instructorName; }
     public void setInstructorName(String instructorName) { this.instructorName = instructorName; }
+
+    public List<Integer> getAdditionalInstructorIds() { return additionalInstructorIds; }
+    public void setAdditionalInstructorIds(List<Integer> additionalInstructorIds) { this.additionalInstructorIds = additionalInstructorIds; }
+
+    public List<String> getAdditionalInstructorNames() { return additionalInstructorNames; }
+    public void setAdditionalInstructorNames(List<String> additionalInstructorNames) { this.additionalInstructorNames = additionalInstructorNames; }
+
+    public List<String> getInstructorEmails() { return instructorEmails; }
+    public void setInstructorEmails(List<String> instructorEmails) { this.instructorEmails = instructorEmails; }
 
     public int getRoomId() { return roomId; }
     public void setRoomId(int roomId) { this.roomId = roomId; }

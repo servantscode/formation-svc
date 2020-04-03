@@ -25,7 +25,7 @@ public class CatechistSvc extends SCServiceBase {
     public PaginatedResponse<Catechist> getCatechists(@PathParam("programId") int programId,
                                                       @QueryParam("start") @DefaultValue("0") int start,
                                                       @QueryParam("count") @DefaultValue("10") int count,
-                                                      @QueryParam("sort_field") @DefaultValue("enrollee_name") String sortField,
+                                                      @QueryParam("sort_field") @DefaultValue("name") String sortField,
                                                       @QueryParam("search") @DefaultValue("") String search) {
 
         verifyUserAccess("program.catechist.list");
