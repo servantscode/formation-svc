@@ -54,7 +54,7 @@ public class SessionDB extends EasyDB<Session> {
 
     public Session getById(int id) {
         QueryBuilder query = baseQuery()
-                .where("session_id=?", id).inOrg("e.org_id");
+                .where("s.id=?", id).inOrg("e.org_id");
         return getOne(query);
     }
 
