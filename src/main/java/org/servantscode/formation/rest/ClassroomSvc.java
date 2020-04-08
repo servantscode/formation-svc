@@ -13,7 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/program/{programId}/classroom")
+@Path("/program/{programId}/section/{sectionId}/classroom")
 public class ClassroomSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(ClassroomSvc.class);
 
@@ -27,6 +27,7 @@ public class ClassroomSvc extends SCServiceBase {
 
     @GET @Produces(MediaType.APPLICATION_JSON)
     public PaginatedResponse<Classroom> getClassrooms(@PathParam("programId") int programId,
+                                                    @PathParam("sectionId") int sectionId,
                                                     @QueryParam("start") @DefaultValue("0") int start,
                                                     @QueryParam("count") @DefaultValue("10") int count,
                                                     @QueryParam("sort_field") @DefaultValue("name") String sortField,
@@ -34,9 +35,9 @@ public class ClassroomSvc extends SCServiceBase {
 
         verifyUserAccess("program.classroom.list");
         try {
-            int totalPeople = db.getCount(search, programId);
+            int totalPeople = db.getCount(search, sectionId);
 
-            List<Classroom> results = db.get(search, sortField, start, count, programId);
+            List<Classroom> results = db.get(search, sortField, start, count, sectionId);
 
             return new PaginatedResponse<>(start, results.size(), totalPeople, results);
         } catch (Throwable t) {
@@ -47,11 +48,12 @@ public class ClassroomSvc extends SCServiceBase {
 
     @GET @Path("/{id}") @Produces(MediaType.APPLICATION_JSON)
     public Classroom getClassroom(@PathParam("programId") int programId,
+                                  @PathParam("sectionId") int sectionId,
                                 @PathParam("id") int id) {
         verifyUserAccess("program.classroom.read");
         try {
             Classroom classroom = db.getById(id);
-            if(classroom.getProgramId() != programId)
+            if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
                 throw new NotFoundException();
             return classroom;
         } catch (Throwable t) {
@@ -64,10 +66,11 @@ public class ClassroomSvc extends SCServiceBase {
     @POST
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Classroom createClassroom(@PathParam("programId") int programId,
+                                     @PathParam("sectionId") int sectionId,
                                    Classroom classroom) {
         verifyUserAccess("program.classroom.create");
         try {
-            if(classroom.getProgramId() != programId)
+            if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
                 throw new BadRequestException();
             db.create(classroom);
             if(classroom.getInstructorId() > 0)
@@ -83,10 +86,11 @@ public class ClassroomSvc extends SCServiceBase {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Classroom updateClassroom(@PathParam("programId") int programId,
+                                     @PathParam("sectionId") int sectionId,
                                    Classroom classroom) {
         verifyUserAccess("program.classroom.update");
 
-        if(classroom.getProgramId() != programId)
+        if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
             throw new BadRequestException();
 
         try {
@@ -105,13 +109,14 @@ public class ClassroomSvc extends SCServiceBase {
 
     @DELETE @Path("/{id}")
     public void deleteClassroom(@PathParam("programId") int programId,
+                                @PathParam("sectionId") int sectionId,
                               @PathParam("id") int id) {
         verifyUserAccess("program.classroom.delete");
         if(id <= 0)
             throw new NotFoundException();
         try {
             Classroom classroom = db.getById(id);
-            if(classroom == null || classroom.getProgramId() != programId || !db.deleteClassroom(id))
+            if(classroom == null || classroom.getProgramId() != programId || classroom.getSectionId() != sectionId || !db.deleteClassroom(id))
                 throw new NotFoundException();
             LOG.info("Deleted classroom: " + classroom.getName());
         } catch (Throwable t) {

@@ -49,21 +49,25 @@ public class ClassroomDB extends EasyDB<Classroom> {
         return select("class.*", "c.id AS instructor_id", "p.name AS instructor_name", "r.name AS room_name", "reg.students", "ac.addtl_catechist_ids", "ac.addtl_catechist_names", "catechist_emails");
     }
 
-    public int getCount(String search, int programId) {
+    public int getCount(String search, int sectionId) {
         return getCount(select(count())
                 .search(searchParser.parse(search))
-                .with("class.program_id", programId));
+                .with("class.section_id", sectionId));
     }
 
-    public List<Classroom> get(String search, String sortField, int start, int count, int programId) {
+    public List<Classroom> get(String search, String sortField, int start, int count, int sectionId) {
         QueryBuilder query =  select(data()).search(searchParser.parse(search))
-                .with("class.program_id", programId)
+                .with("class.section_id", sectionId)
                 .page(sortField, start, count);
         return get(query);
     }
 
     public Classroom getById(int id) {
         return getOne(select(data()).where("class.id=?", id));
+    }
+
+    public List<Classroom> getSectionClassrooms(int sectionId) {
+        return get(select(data()).where("class.section_id=?", sectionId));
     }
 
     public List<Classroom> getProgramClassrooms(int programId) {
@@ -74,6 +78,7 @@ public class ClassroomDB extends EasyDB<Classroom> {
         InsertBuilder cmd = new InsertBuilder().into("classrooms")
                 .value("name", classroom.getName())
                 .value("program_id", classroom.getProgramId())
+                .value("section_id", classroom.getSectionId())
                 .value("room_id", classroom.getRoomId())
                 .value("org_id", OrganizationContext.orgId());
         classroom.setId(createAndReturnKey(cmd));
@@ -84,6 +89,7 @@ public class ClassroomDB extends EasyDB<Classroom> {
         UpdateBuilder cmd = new UpdateBuilder().update("classrooms")
                 .value("name", classroom.getName())
                 .value("program_id", classroom.getProgramId())
+                .value("section_id", classroom.getSectionId())
                 .value("room_id", classroom.getRoomId())
                 .value("complete", classroom.isComplete())
                 .where("id=?", classroom.getId())
@@ -108,6 +114,7 @@ public class ClassroomDB extends EasyDB<Classroom> {
         s.setId(rs.getInt("id"));
         s.setName(rs.getString("name"));
         s.setProgramId(rs.getInt("program_id"));
+        s.setSectionId(rs.getInt("section_id"));
         s.setInstructorId(rs.getInt("instructor_id"));
         s.setInstructorName(rs.getString("instructor_name"));
         s.setAdditionalInstructorIds(decodeList(rs.getString("addtl_catechist_ids"), Integer::parseInt));

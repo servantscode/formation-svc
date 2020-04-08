@@ -3,10 +3,7 @@ package org.servantscode.formation.db;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.servantscode.commons.db.EasyDB;
-import org.servantscode.commons.search.InsertBuilder;
 import org.servantscode.commons.search.QueryBuilder;
-import org.servantscode.commons.search.UpdateBuilder;
-import org.servantscode.formation.Registration;
 import org.servantscode.formation.Student;
 
 import java.sql.ResultSet;
@@ -37,7 +34,7 @@ public class StudentDB extends EasyDB<Student> {
                 .leftJoin("relationships rel ON rel.subject_id=p.id AND rel.contact_preference=1 AND rel.guardian=true")
                 .leftJoin("people parent ON rel.other_id=parent.id")
                 .leftJoin("person_phone_numbers pn ON pn.person_id=parent.id AND pn.is_primary=true")
-                .leftJoin("classrooms s ON s.id=r.classroom_id")
+                .leftJoin("classrooms c ON c.id=r.classroom_id")
                 .leftJoin("sacramental_groups sg ON sg.id=r.sacramental_group_id")
                 .inOrg("p.org_id");
     }
@@ -49,7 +46,7 @@ public class StudentDB extends EasyDB<Student> {
                 .select("p.allergies")
                 .select("p.email")
                 .select("spn.number AS phone_number")
-                .select("s.name AS classroom_name")
+                .select("c.name AS classroom_name")
                 .select("sg.name AS sg_name")
                 .select("string_agg(parent.name, '|') AS parents")
                 .select("string_agg(pn.number, '|') AS parent_phones")
@@ -58,7 +55,20 @@ public class StudentDB extends EasyDB<Student> {
     }
 
     public Map<Integer, List<Student>> getProgramClassAssignments(int programId) {
-        QueryBuilder query = data().groupBy("r.id", "p.id", "s.id", "sg.id", "s.id", "spn.number");
+        QueryBuilder query = data().with("c.program_id", programId).groupBy("r.id", "p.id", "c.id", "sg.id", "spn.number");
+        Map<Integer, List<Student>> results = new HashMap<>();
+
+        get(query).forEach(r -> {
+            if(!results.containsKey(r.getClassroomId()))
+                results.put(r.getClassroomId(), new LinkedList<>());
+            results.get(r.getClassroomId()).add(r);
+        });
+
+        return results;
+    }
+
+    public Map<Integer, List<Student>> getSectionClassAssignments(int sectionId) {
+        QueryBuilder query = data().with("c.section_id", sectionId).groupBy("r.id", "p.id", "c.id", "sg.id", "spn.number");
         Map<Integer, List<Student>> results = new HashMap<>();
 
         get(query).forEach(r -> {

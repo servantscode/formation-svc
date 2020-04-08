@@ -30,6 +30,21 @@ public class DBUpgrade extends AbstractDBUpgrade {
                                          "org_id INTEGER references organizations(id) ON DELETE CASCADE)");
         }
 
+        if(!tableExists("sections")) {
+            if(columnExists("sections", "instructor_id"))
+                throw new IllegalStateException("Invalid sections table found");
+
+            LOG.info("-- Creating sections table");
+            runSql("CREATE TABLE sections (id SERIAL PRIMARY KEY, " +
+                   "name TEXT NOT NULL, " +
+                   "program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE, " +
+                   "recurrence_id INTEGER REFERENCES recurrences(id) ON DELETE SET NULL, " +
+                   "day TEXT, " +
+                   "time TEXT)");
+        }
+
+        //CREATE TABLE sections (id SERIAL PRIMARY KEY, name TEXT NOT NULL, program_id INTEGER NOT NULL REFERENCES programs(id) ON DELETE CASCADE, recurrence_id INTEGER REFERENCES recurrences(id) ON DELETE SET NULL, day TEXT, time TEXT)
+
         if(!tableExists("program_sessions")) {
             LOG.info("-- Creating program sessions table");
             runSql("CREATE TABLE program_sessions(id SERIAL PRIMARY KEY, " +
@@ -39,16 +54,12 @@ public class DBUpgrade extends AbstractDBUpgrade {
 
         if(!tableExists("classrooms")) {
             LOG.info("-- Creating classrooms table");
-
-            if(tableExists("sections"))
-                runSql("ALTER TABLE sections RENAME TO classrooms");
-            else
-                runSql("CREATE TABLE classrooms(id SERIAL PRIMARY KEY, " +
-                        "name TEXT NOT NULL, " +
-                        "program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE, " +
-                        "room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL, " +
-                        "complete BOOLEAN DEFAULT false, " +
-                        "org_id INTEGER references organizations(id) ON DELETE CASCADE)");
+            runSql("CREATE TABLE classrooms(id SERIAL PRIMARY KEY, " +
+                    "name TEXT NOT NULL, " +
+                    "program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE, " +
+                    "room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL, " +
+                    "complete BOOLEAN DEFAULT false, " +
+                    "org_id INTEGER references organizations(id) ON DELETE CASCADE)");
         }
 
         if(!tableExists("sacramental_groups")) {
@@ -90,27 +101,23 @@ public class DBUpgrade extends AbstractDBUpgrade {
             }
         }
 
-        // 2020-03-28
-        if(!columnExists("attendance", "classroom_id") && columnExists("attendance", "section_id")) {
-            runSql("ALTER TABLE attendance RENAME COLUMN section_id TO classroom_id");
-            runSql("ALTER TABLE attendance RENAME CONSTRAINT attendance_section_id_fkey TO attendance_classroom_id_fkey");
+        if(!columnExists("program_sessions", "section_id")) {
+            runSql("INSERT INTO sections (name, program_id, recurrence_id, day, time) " +
+                   "SELECT DISTINCT " +
+                   "concat(trim(to_char(e.start_time, 'day')), ' ', extract(hour from e.start_time), ':', LPAD(extract(minute from e.start_time)::TEXT, 2, '0')), " +
+                   "s.program_id, e.recurring_meeting_id, UPPER(trim(to_char(e.start_time, 'day'))), " +
+                   "concat(extract(hour from e.start_time), ':', LPAD(extract(minute from e.start_time)::TEXT, 2, '0')) " +
+                   "FROM program_sessions s " +
+                   "LEFT JOIN events e ON s.event_id=e.id");
+            runSql("ALTER TABLE program_sessions ADD COLUMN section_id INTEGER");
+            runSql("UPDATE program_sessions ps SET section_id=s.id FROM sections s left join events e on s.recurrence_id=e.recurring_meeting_id where ps.event_id=e.id");
+            runSql("ALTER TABLE program_sessions ADD CONSTRAINT program_sessions_section_id_fkey FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE");
         }
 
-        if(!columnExists("registrations", "classroom_id")) {
-            runSql("ALTER TABLE registrations RENAME COLUMN section_id TO classroom_id");
-            runSql("ALTER TABLE registrations RENAME CONSTRAINT registrations_section_id_fkey TO registrations_classroom_id_fkey");
+        if(!columnExists("classrooms", "section_id")) {
+            runSql("ALTER TABLE classrooms ADD COLUMN section_id INTEGER");
+            runSql("UPDATE classrooms c SET section_id=s.id FROM sections s where c.program_id=s.program_id");
+            runSql("ALTER TABLE classrooms ADD CONSTRAINT program_sessions_section_id_fkey FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE");
         }
-
-        if(indexExists("classrooms", "sections_pkey"))
-            runSql("ALTER INDEX sections_pkey RENAME TO classrooms_pkey");
-
-        if(indexExists("classrooms", "sections_org_id_fkey"))
-            runSql("ALTER TABLE classrooms RENAME CONSTRAINT sections_org_id_fkey TO classrooms_org_id_fkey");
-
-        if(indexExists("classrooms", "sections_program_id_fkey"))
-            runSql("ALTER TABLE classrooms RENAME CONSTRAINT sections_program_id_fkey TO classrooms_program_id_fkey");
-
-        if(indexExists("classrooms", "sections_room_id_fkey"))
-            runSql("ALTER TABLE classrooms RENAME CONSTRAINT sections_room_id_fkey TO classrooms_sections_room_id_fkey");
     }
 }

@@ -2,16 +2,16 @@ package org.servantscode.formation.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.servantscode.client.ApiClientFactory;
 import org.servantscode.commons.pdf.PdfWriter;
 import org.servantscode.commons.pdf.PdfWriter.SpecialColumns;
 import org.servantscode.commons.rest.PaginatedResponse;
 import org.servantscode.commons.rest.SCServiceBase;
+import org.servantscode.formation.AttendenceSheetGenerator;
 import org.servantscode.formation.Classroom;
 import org.servantscode.formation.Program;
 import org.servantscode.formation.Student;
-import org.servantscode.formation.db.ProgramDB;
 import org.servantscode.formation.db.ClassroomDB;
+import org.servantscode.formation.db.ProgramDB;
 import org.servantscode.formation.db.StudentDB;
 
 import javax.ws.rs.*;
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.lang.String.join;
 import static org.servantscode.commons.pdf.PdfWriter.Alignment.CENTER;
@@ -121,12 +120,16 @@ public class ProgramSvc extends SCServiceBase {
     public Response generateAttendanceSheets(@PathParam("id") int id) {
         verifyUserAccess("donation.read");
         try {
-            ApiClientFactory.instance().authenticateAsSystem();
             final List<Classroom> classrooms = classroomDb.getProgramClassrooms(id);
             final Map<Integer, List<Student>> classAssignments = studentDb.getProgramClassAssignments(id);
 
             StreamingOutput stream = output -> {
-                createAttendanceSheets(classrooms, classAssignments, output);
+                try {
+                    new AttendenceSheetGenerator().createAttendanceSheets(classrooms, classAssignments, output);
+                } catch (Throwable t) {
+                    LOG.error("Failed to create attendance sheet document.", t);
+                    throw new WebApplicationException("Failed to create attendance sheets", t);
+                }
             };
 
             return Response.ok(stream).build();
@@ -135,50 +138,6 @@ public class ProgramSvc extends SCServiceBase {
             LOG.error("Retrieving annual report failed:", t);
             throw t;
         }
-
     }
 
-    private void createAttendanceSheets(List<Classroom> classrooms, Map<Integer, List<Student>> classAssignments, OutputStream output) {
-        try (PdfWriter writer = new PdfWriter()) {
-            for(int i = 0; i< classrooms.size(); i++){
-                Classroom classroom = classrooms.get(i);
-                createAttendanceSheet(classroom, classAssignments.get(classroom.getId()), i+1, writer);
-            }
-
-            writer.writeToStream(output);
-        } catch (Throwable t) {
-            LOG.error("Failed to create pdf document for annual report", t);
-            throw new WebApplicationException("Failed to create annual report pdf", t);
-        }
-    }
-
-    private void createAttendanceSheet(Classroom s, List<Student> students, int pageNumber, PdfWriter writer) throws IOException {
-        if(pageNumber > 1) writer.newPage();
-
-        writer.beginText();
-        writer.setFontSize(20);
-        writer.addLine(s.getInstructorName());
-        writer.addBlankSpace(0.5f);
-
-        writer.setFontSize(12);
-        if(s.getAdditionalInstructorNames().size() > 0) {
-            writer.addLine("Assistants: " + String.join(", ", s.getAdditionalInstructorNames()));
-            writer.addBlankLine();
-        }
-
-        writer.addLine("Class: " + s.getName());
-        writer.addLine("Room: " + s.getRoomName());
-        writer.addBlankLine();
-
-        writer.startTable(new int[] {20, 160, 160, 80, 120}, new PdfWriter.Alignment[] {CENTER, LEFT, LEFT, LEFT, LEFT});
-        writer.addTableHeader("Attd.", "Student", "Contact", "Phone #", "Allergies");
-        for(Student student: students) {
-            writer.addTableRow(SpecialColumns.CHECKBOX, student.getEnrolleeName(),
-                               student.getParentNames().isEmpty()? "": student.getParentNames().get(0),
-                               student.getParentPhones().isEmpty()? "": student.getParentPhones().get(0),
-                               join(", ", student.getAllergies()));
-        }
-
-        writer.endText();
-    }
 }

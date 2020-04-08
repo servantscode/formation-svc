@@ -1,15 +1,12 @@
 package org.servantscode.formation.db;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jdk.nashorn.internal.runtime.JSONFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.servantscode.commons.db.EasyDB;
-import org.servantscode.commons.rest.SCServiceBase;
-import org.servantscode.commons.search.*;
-import org.servantscode.commons.security.OrganizationContext;
-import org.servantscode.formation.Catechist;
+import org.servantscode.commons.search.DeleteBuilder;
+import org.servantscode.commons.search.InsertBuilder;
+import org.servantscode.commons.search.QueryBuilder;
+import org.servantscode.commons.search.UpdateBuilder;
 import org.servantscode.formation.Catechist;
 
 import java.sql.ResultSet;

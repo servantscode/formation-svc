@@ -6,7 +6,7 @@ import org.servantscode.commons.db.EasyDB;
 import org.servantscode.commons.search.DeleteBuilder;
 import org.servantscode.commons.search.QueryBuilder;
 import org.servantscode.formation.Session;
-import org.servantscode.formation.SessionSeries;
+import org.servantscode.formation.Section;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,17 +37,17 @@ public class SessionDB extends EasyDB<Session> {
                 .join("LEFT JOIN events e ON e.id=s.event_id");
     }
 
-    public int getCount(String search, int programId) {
+    public int getCount(String search, int sectionId) {
         QueryBuilder query = tables(selectAll())
                 .search(searchParser.parse(search))
-                .where("program_id=?", programId).inOrg("e.org_id");
+                .with("section_id", sectionId).inOrg("e.org_id");
         return getCount(query);
     }
 
-    public List<Session> get(String search, String sort, int start, int count, int programId) {
+    public List<Session> get(String search, String sort, int start, int count, int sectionId) {
         QueryBuilder query = baseQuery()
                 .search(searchParser.parse(search))
-                .where("program_id=?", programId).inOrg("e.org_id")
+                .with("section_id", sectionId).inOrg("e.org_id")
                 .page(sort, start, count);
         return get(query);
     }
@@ -58,19 +58,24 @@ public class SessionDB extends EasyDB<Session> {
         return getOne(query);
     }
 
-    public void createSeries(SessionSeries series) {
-        String sql = "INSERT INTO program_sessions (program_id, event_id) " +
-                     "SELECT ?, e.id FROM events e WHERE e.recurring_meeting_id=?";
+    public void linkSeries(Section section) {
+        String sql = "INSERT INTO program_sessions (program_id, section_id, event_id) " +
+                     "SELECT ?, ?, e.id FROM events e WHERE e.recurring_meeting_id=?";
         try(Connection conn = getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, series.getProgramId());
-            stmt.setInt(2, series.getRecurrenceId());
+            stmt.setInt(1, section.getProgramId());
+            stmt.setInt(2, section.getId());
+            stmt.setInt(3, section.getRecurrenceId());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to link event sessions to program.", e);
         }
+    }
+
+    public void deleteSeries(int sectionId) {
+        delete(deleteFrom("program_sessions").with("section_id", sectionId));
     }
 
     public boolean delete(int id) {
@@ -82,6 +87,7 @@ public class SessionDB extends EasyDB<Session> {
         Session s = new Session();
         s.setId(rs.getInt("id"));
         s.setProgramId(rs.getInt("program_id"));
+        s.setSectionId(rs.getInt("section_id"));
         s.setEventId(rs.getInt("event_id"));
         s.setStartTime(convert(rs.getTimestamp("start_time")));
         s.setEndTime(convert(rs.getTimestamp("end_time")));

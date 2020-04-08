@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 public class Session {
     private int id;
     private int programId;
+    private int sectionId;
     private int eventId;
 
     private ZonedDateTime startTime;
@@ -25,4 +26,9 @@ public class Session {
 
     public ZonedDateTime getEndTime() { return endTime; }
     public void setEndTime(ZonedDateTime endTime) { this.endTime = endTime; }
+
+    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+    public int getSectionId() {
+        return sectionId;
+    }
 }

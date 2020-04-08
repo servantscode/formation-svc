@@ -6,6 +6,7 @@ public class Classroom {
     private int id;
     private String name;
     private int programId;
+    private int sectionId;
     private int instructorId;
     private String instructorName;
     private List<Integer> additionalInstructorIds;
@@ -25,6 +26,9 @@ public class Classroom {
 
     public int getProgramId() { return programId; }
     public void setProgramId(int programId) { this.programId = programId; }
+
+    public int getSectionId() { return sectionId; }
+    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
 
     public int getInstructorId() { return instructorId; }
     public void setInstructorId(int instructorId) { this.instructorId = instructorId; }
