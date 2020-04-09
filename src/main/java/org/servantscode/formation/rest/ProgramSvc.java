@@ -2,41 +2,36 @@ package org.servantscode.formation.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.servantscode.commons.pdf.PdfWriter;
-import org.servantscode.commons.pdf.PdfWriter.SpecialColumns;
 import org.servantscode.commons.rest.PaginatedResponse;
 import org.servantscode.commons.rest.SCServiceBase;
-import org.servantscode.formation.AttendenceSheetGenerator;
-import org.servantscode.formation.Classroom;
-import org.servantscode.formation.Program;
-import org.servantscode.formation.Student;
+import org.servantscode.formation.*;
 import org.servantscode.formation.db.ClassroomDB;
 import org.servantscode.formation.db.ProgramDB;
+import org.servantscode.formation.db.SectionDB;
 import org.servantscode.formation.db.StudentDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.join;
-import static org.servantscode.commons.pdf.PdfWriter.Alignment.CENTER;
-import static org.servantscode.commons.pdf.PdfWriter.Alignment.LEFT;
 
 @Path("/program")
 public class ProgramSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(ProgramSvc.class);
 
     private ProgramDB db;
+    private SectionDB sectionDb;
     private ClassroomDB classroomDb;
     private StudentDB studentDb;
 
     public ProgramSvc() {
         db = new ProgramDB();
+        sectionDb = new SectionDB();
         classroomDb = new ClassroomDB();
         studentDb = new StudentDB();
     }
@@ -78,6 +73,9 @@ public class ProgramSvc extends SCServiceBase {
         verifyUserAccess("program.create");
         try {
             db.create(program);
+
+            createDefaultSection(program);
+
             LOG.info("Created program: " + program.getName());
             return program;
         } catch (Throwable t) {
@@ -85,6 +83,7 @@ public class ProgramSvc extends SCServiceBase {
             throw t;
         }
     }
+
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
@@ -140,4 +139,15 @@ public class ProgramSvc extends SCServiceBase {
         }
     }
 
+    // ----- Private -----
+    private void createDefaultSection(Program program) {
+        Section s = new Section();
+        s.setProgramId(program.getId());
+        s.setName("Default");
+        DayTime dayTime = new DayTime();
+        dayTime.setDayOfWeek(DayOfWeek.SUNDAY);
+        dayTime.setTimeOfDay("8:00");
+        s.setDayTime(dayTime);
+        sectionDb.create(s);
+    }
 }

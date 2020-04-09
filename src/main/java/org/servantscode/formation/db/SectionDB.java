@@ -61,7 +61,7 @@ public class SectionDB extends EasyDB<Section> {
         return get(select(data()).where("s.program_id=?", programId));
     }
 
-    public Section create(Section section) {
+   public Section create(Section section) {
         InsertBuilder cmd = new InsertBuilder().into("sections")
                 .value("name", section.getName())
                 .value("program_id", section.getProgramId())
