@@ -13,7 +13,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/program/{programId}/section/{sectionId}/classroom")
+import static java.lang.Integer.parseInt;
+import static org.servantscode.commons.StringUtils.isSet;
+
+@Path("/program/{programId}{section: (/section/\\d+)?}/classroom")
 public class ClassroomSvc extends SCServiceBase {
     private static final Logger LOG = LogManager.getLogger(ClassroomSvc.class);
 
@@ -27,17 +30,25 @@ public class ClassroomSvc extends SCServiceBase {
 
     @GET @Produces(MediaType.APPLICATION_JSON)
     public PaginatedResponse<Classroom> getClassrooms(@PathParam("programId") int programId,
-                                                    @PathParam("sectionId") int sectionId,
+                                                    @PathParam("section") String optionalSection,
                                                     @QueryParam("start") @DefaultValue("0") int start,
                                                     @QueryParam("count") @DefaultValue("10") int count,
                                                     @QueryParam("sort_field") @DefaultValue("name") String sortField,
                                                     @QueryParam("search") @DefaultValue("") String search) {
 
+        int sectionId = parseSectionId(optionalSection);
         verifyUserAccess("program.classroom.list");
         try {
-            int totalPeople = db.getCount(search, sectionId);
+            int totalPeople;
+            List<Classroom> results;
 
-            List<Classroom> results = db.get(search, sortField, start, count, sectionId);
+            if(sectionId > 0) {
+                totalPeople = db.getSectionCount(search, sectionId);
+                results = db.getSectionClassrooms(search, sortField, start, count, sectionId);
+            } else {
+                totalPeople = db.getProgramCount(search, programId);
+                results = db.getProgramClassrooms(search, sortField, start, count, programId);
+            }
 
             return new PaginatedResponse<>(start, results.size(), totalPeople, results);
         } catch (Throwable t) {
@@ -48,12 +59,16 @@ public class ClassroomSvc extends SCServiceBase {
 
     @GET @Path("/{id}") @Produces(MediaType.APPLICATION_JSON)
     public Classroom getClassroom(@PathParam("programId") int programId,
-                                  @PathParam("sectionId") int sectionId,
-                                @PathParam("id") int id) {
+                                  @PathParam("section") String optionalSection,
+                                  @PathParam("id") int id) {
+
+        int sectionId = parseSectionId(optionalSection);
+
         verifyUserAccess("program.classroom.read");
         try {
             Classroom classroom = db.getById(id);
-            if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
+            if(classroom.getProgramId() != programId ||
+                    (sectionId > 0 && classroom.getSectionId() != sectionId))
                 throw new NotFoundException();
             return classroom;
         } catch (Throwable t) {
@@ -66,8 +81,10 @@ public class ClassroomSvc extends SCServiceBase {
     @POST
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Classroom createClassroom(@PathParam("programId") int programId,
-                                     @PathParam("sectionId") int sectionId,
-                                   Classroom classroom) {
+                                     @PathParam("section") String requiredSection,
+                                     Classroom classroom) {
+
+        int sectionId = parseSectionId(requiredSection);
         verifyUserAccess("program.classroom.create");
         try {
             if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
@@ -86,8 +103,10 @@ public class ClassroomSvc extends SCServiceBase {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
     public Classroom updateClassroom(@PathParam("programId") int programId,
-                                     @PathParam("sectionId") int sectionId,
-                                   Classroom classroom) {
+                                     @PathParam("section") String requiredSection,
+                                     Classroom classroom) {
+
+        int sectionId = parseSectionId(requiredSection);
         verifyUserAccess("program.classroom.update");
 
         if(classroom.getProgramId() != programId || classroom.getSectionId() != sectionId)
@@ -109,8 +128,10 @@ public class ClassroomSvc extends SCServiceBase {
 
     @DELETE @Path("/{id}")
     public void deleteClassroom(@PathParam("programId") int programId,
-                                @PathParam("sectionId") int sectionId,
-                              @PathParam("id") int id) {
+                                @PathParam("section") String requiredSection,
+                                @PathParam("id") int id) {
+
+        int sectionId = parseSectionId(requiredSection);
         verifyUserAccess("program.classroom.delete");
         if(id <= 0)
             throw new NotFoundException();
@@ -124,4 +145,12 @@ public class ClassroomSvc extends SCServiceBase {
             throw t;
         }
     }
+
+    // ----- Private -----
+    private int parseSectionId(@PathParam("section") String optionalSection) {
+        int sectionId = isSet(optionalSection)? parseInt(optionalSection.split("\\/")[2]) : 0;
+        LOG.debug("Found sectionId: " + sectionId);
+        return sectionId;
+    }
+
 }

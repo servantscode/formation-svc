@@ -49,15 +49,28 @@ public class ClassroomDB extends EasyDB<Classroom> {
         return select("class.*", "c.id AS instructor_id", "p.name AS instructor_name", "r.name AS room_name", "reg.students", "ac.addtl_catechist_ids", "ac.addtl_catechist_names", "catechist_emails");
     }
 
-    public int getCount(String search, int sectionId) {
+    public int getSectionCount(String search, int sectionId) {
         return getCount(select(count())
                 .search(searchParser.parse(search))
                 .with("class.section_id", sectionId));
     }
 
-    public List<Classroom> get(String search, String sortField, int start, int count, int sectionId) {
+    public List<Classroom> getSectionClassrooms(String search, String sortField, int start, int count, int sectionId) {
         QueryBuilder query =  select(data()).search(searchParser.parse(search))
                 .with("class.section_id", sectionId)
+                .page(sortField, start, count);
+        return get(query);
+    }
+
+    public int getProgramCount(String search, int programId) {
+        return getCount(select(count())
+                .search(searchParser.parse(search))
+                .with("class.program_id", programId));
+    }
+
+    public List<Classroom> getProgramClassrooms(String search, String sortField, int start, int count, int programId) {
+        QueryBuilder query =  select(data()).search(searchParser.parse(search))
+                .with("class.program_id", programId)
                 .page(sortField, start, count);
         return get(query);
     }
